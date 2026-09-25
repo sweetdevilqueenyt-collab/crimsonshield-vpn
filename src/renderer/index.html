@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self'; font-src 'self'; script-src 'self'">
+<title>CrimsonShield VPN</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <header class="titlebar">
+    <div class="tb-brand"><img src="icon.png" alt=""><span>CrimsonShield</span></div>
+    <div class="tb-btns">
+      <button id="tbMin" title="Minimize"><svg viewBox="0 0 10 10"><path d="M1 5h8"/></svg></button>
+      <button id="tbClose" title="Hide to tray"><svg viewBox="0 0 10 10"><path d="M1 1l8 8M9 1l-8 8"/></svg></button>
+    </div>
+  </header>
+
+  <!-- ── Login ── -->
+  <section id="login" class="view hidden">
+    <div class="login-inner">
+      <img src="icon.png" class="login-sigil" alt="">
+      <h1>Enter the Veil</h1>
+      <p class="muted">Paste the license key you got from our website.</p>
+      <form id="loginForm">
+        <input id="key" class="key" placeholder="CSV-XXXX-XXXX-XXXX-XXXX" spellcheck="false" autocomplete="off" required>
+        <button class="btn primary wide" id="loginBtn">Activate</button>
+      </form>
+      <p class="error hidden" id="loginErr"></p>
+      <p class="muted small">No key? <a href="#" id="buyLink">Get a license key</a></p>
+      <p class="muted small">Website: <span id="apiHost"></span> · <a href="#" id="apiEdit">change</a></p>
+      <form id="apiForm" class="hidden">
+        <input id="apiInput" placeholder="https://your-site.netlify.app" spellcheck="false">
+        <button class="btn wide" style="margin-top:8px">Save website</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- ── Main ── -->
+  <section id="main" class="view hidden">
+    <div class="pages">
+      <!-- Home -->
+      <div class="page" id="p-home">
+        <div class="status-label" id="stLabel">Not protected</div>
+        <div class="status-sub" id="stSub">Your real IP is visible</div>
+
+        <button class="power" id="power" aria-label="Connect">
+          <span class="ring r1"></span><span class="ring r2"></span>
+          <svg viewBox="0 0 24 24"><path d="M12 3v9M6.3 6.3a8 8 0 1 0 11.4 0"/></svg>
+        </button>
+        <div class="timer" id="timer">00:00:00</div>
+        <p class="message" id="msg"></p>
+
+        <button class="loc" id="locBtn">
+          <span class="flag" id="locFlag">🌐</span>
+          <span class="loc-meta"><b id="locName">Choose a server</b><small id="locCountry"></small></span>
+          <svg viewBox="0 0 24 24" class="chev"><path d="M9 6l6 6-6 6"/></svg>
+        </button>
+
+        <div class="stats">
+          <div><small>Public IP</small><b id="ipVal">—</b></div>
+          <div><small>↓ Down</small><b id="rxVal">—</b></div>
+          <div><small>↑ Up</small><b id="txVal">—</b></div>
+        </div>
+      </div>
+
+      <!-- Servers -->
+      <div class="page hidden" id="p-servers">
+        <h2>Server locations</h2>
+        <input id="srvSearch" placeholder="Search country or city…">
+        <div id="srvList" class="srv-list"></div>
+      </div>
+
+      <!-- Console sharing -->
+      <div class="page hidden" id="p-console">
+        <h2>Share VPN with console</h2>
+        <p class="muted small">Route your PlayStation, Xbox, Switch, or any device through this PC's VPN. The console doesn't use one of your license's device slots.</p>
+
+        <label class="toggle big"><span><b id="shTitle">Sharing is off</b><small id="shSub">Turn on to give your console a protected connection</small></span><input type="checkbox" id="shToggle"><i></i></label>
+        <p class="message" id="shMsg"></p>
+
+        <div class="field"><small>How is the console connected?</small>
+          <div class="seg" id="shMode">
+            <button data-m="hotspot">📶 Wi-Fi hotspot</button>
+            <button data-m="ethernet">🔌 Ethernet cable</button>
+          </div>
+        </div>
+
+        <div id="shHotspot">
+          <div class="hotspot-card">
+            <div><small>Wi-Fi name</small><input id="shSsid" maxlength="32" spellcheck="false"></div>
+            <div><small>Password</small><input id="shPass" maxlength="32" spellcheck="false"></div>
+            <div class="clients"><small>Connected devices</small><b id="shClients">—</b></div>
+          </div>
+          <p class="muted small hidden" id="shNoWifi"></p>
+        </div>
+
+        <div id="shEthernet" class="hidden">
+          <div class="field"><small>Ethernet port the console is plugged into</small><select id="shAdapter"></select></div>
+          <p class="muted small">Pick the port the console's cable goes into, not the one to your router.</p>
+        </div>
+
+        <h2>Smart DNS <span class="tag">streaming</span></h2>
+        <p class="muted small">No PC needed: set the console's DNS to a server below and streaming apps see that country. It doesn't encrypt or change your IP in games.</p>
+        <div class="dns-you" id="dnsYou">Checking…</div>
+        <button class="btn wide" id="dnsAdd">Register this network</button>
+        <label class="toggle" style="margin-top:8px"><span><b>Keep my home IP updated</b><small>Re-registers automatically if your ISP changes your IP</small></span><input type="checkbox" id="dnsAuto"><i></i></label>
+        <p class="error hidden" id="dnsErr"></p>
+        <div class="dns-servers" id="dnsServers"></div>
+        <p class="muted small">On the console: network settings → DNS → Manual → put the same IP in <b>Primary</b> and <b>Secondary</b>.</p>
+
+        <h2>Console setup</h2>
+        <div class="guide-tabs" id="shGuideTabs">
+          <button data-g="ps" class="on">PlayStation</button><button data-g="xbox">Xbox</button><button data-g="switch">Switch</button>
+        </div>
+        <ol class="guide" id="shGuide"></ol>
+        <p class="muted small">Tip: for online games the console will usually show NAT Type 3 / Strict. That's normal on a VPN. Party chat and matchmaking still work in most games.</p>
+      </div>
+
+      <!-- Settings -->
+      <div class="page hidden" id="p-settings">
+        <h2>Protection</h2>
+        <label class="toggle"><span><b>Kill switch</b><small id="ksNote">Blocks all internet if the VPN drops</small></span><input type="checkbox" data-s="killSwitch"><i></i></label>
+
+        <h2>Split tunneling</h2>
+        <select data-s="split">
+          <option value="full">Off — everything through VPN</option>
+          <option value="bypass-lan">Bypass local network</option>
+          <option value="exclude">Exclude these networks</option>
+          <option value="include">Only these networks use VPN</option>
+        </select>
+        <textarea data-s="cidrs" id="cidrs" class="hidden" placeholder="One IP or CIDR per line&#10;e.g. 192.168.1.0/24"></textarea>
+
+        <h2>Connection</h2>
+        <div class="field"><small>Port / protocol</small><select data-s="port" id="portSel"></select></div>
+        <div class="field"><small>DNS</small><select data-s="dns" id="dnsSel"></select></div>
+
+        <h2>App</h2>
+        <label class="toggle"><span><b>Auto-connect</b><small>Connect when the app starts</small></span><input type="checkbox" data-s="autoConnect"><i></i></label>
+        <label class="toggle"><span><b>Launch at startup</b><small>Start with Windows, minimized to tray</small></span><input type="checkbox" data-s="launchAtStartup"><i></i></label>
+
+        <h2>Account</h2>
+        <div class="account">
+          <div><small>Plan</small><b id="accPlan">—</b></div>
+          <div><small>Expires</small><b id="accExp">—</b></div>
+          <div><small>Devices</small><b id="accDev">—</b></div>
+          <div><small>Key</small><b id="accKey">—</b></div>
+        </div>
+        <button class="btn danger wide" id="logoutBtn">Log out of this PC</button>
+        <p class="muted small center" id="verLine"></p>
+      </div>
+    </div>
+
+    <nav class="tabs">
+      <button data-p="home" class="on"><svg viewBox="0 0 24 24"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6l-8-3Z"/></svg>VPN</button>
+      <button data-p="servers"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3.5 9h17M3.5 15h17M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></svg>Servers</button>
+      <button data-p="console"><svg viewBox="0 0 24 24"><path d="M6 11h4M8 9v4M15 12h.01M18 10h.01"/><path d="M17.3 5H6.7a4 4 0 0 0-3.95 3.4L2 14.6A3 3 0 0 0 7.2 17l1.3-2h7l1.3 2a3 3 0 0 0 5.2-2.4l-.75-6.2A4 4 0 0 0 17.3 5Z"/></svg>Console</button>
+      <button data-p="settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg>Settings</button>
+    </nav>
+  </section>
+
+  <script src="app.js"></script>
+</body>
+</html>
