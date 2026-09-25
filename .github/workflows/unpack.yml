@@ -1,0 +1,26 @@
+name: Unpack uploaded zip
+on:
+  push:
+    paths: ["*.zip"]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  unpack:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unpack
+        run: |
+          shopt -s nullglob
+          for z in *.zip; do
+            unzip -o "$z" -x ".github/*" -d .
+            git rm -q "$z"
+          done
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Unpack uploaded app source" || echo "nothing to commit"
+          git push
